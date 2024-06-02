@@ -1,0 +1,16 @@
+Track number: 01
+Performance: 8
+Total execution time: 1.47 seconds
+
+Track number: 02
+Performance: 14
+Total execution time: 3.16 seconds
+
+Track number: 03
+Performance: 42
+Total execution time: 42.42 seconds
+
+Track number: 04
+Performance: 41
+Total execution time: 34.46 seconds
+
