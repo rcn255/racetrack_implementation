@@ -12,6 +12,7 @@ class RaceCar:
         self.inertia = (0, 0)
         self.pos_hist = [self.start_pos[0]]
         self.max_depth = max_depth
+        self.init_max_depth = max_depth
         self.max_speed = max_speed
         self.strategy = strategy
         self.speed_importance = speed_importance # = k for logistic_function
@@ -26,6 +27,14 @@ class RaceCar:
         new_pos = self.find_next_pos(self.pos, self.inertia)
         print(f"{len(self.pos_hist)} {new_pos}")
         self.inertia = (new_pos[0] - self.pos[0], new_pos[1] - self.pos[1])
+        print(f"max inertia: {self.max_inertia(self.inertia)}")
+
+        if self.max_inertia(self.inertia) > self.max_speed * 3/4:
+            self.max_depth = self.init_max_depth + 1
+        else:
+            self.max_depth = self.init_max_depth
+        print(self.max_depth)
+
         self.pos = new_pos
         self.pos_hist.append(new_pos)
 
@@ -61,7 +70,7 @@ class RaceCar:
                     best_inertia = current_inertia
                     best_eval = eval_pos
                     best_depth = depth
-                elif eval_pos == best_eval and depth == best_depth and max(current_inertia) > max(best_inertia):
+                elif eval_pos == best_eval and depth == best_depth and self.max_inertia(current_inertia) > self.max_inertia(best_inertia):
                     best_path = current_path
                     best_inertia = current_inertia
                     best_eval = eval_pos
@@ -166,7 +175,10 @@ class RaceCar:
             else:
                 return np.inf
         else:
-            return self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] - self.logistic_function(max(inertia))
+            return self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] - self.logistic_function(self.max_inertia(inertia))
 
     def logistic_function(self, x):
         return 1 / (1 + np.exp(-self.speed_importance * (x - (self.max_speed / 2))))
+
+    def max_inertia(self, inertia):
+        return max(abs(inertia[0]), abs(inertia[1]))
