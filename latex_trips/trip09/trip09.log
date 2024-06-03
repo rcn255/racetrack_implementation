@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2024.5.29)  3 JUN 2024 09:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2024.5.29)  3 JUN 2024 09:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**trip10.tex
-(./trip10.tex
+**trip09.tex
+(./trip09.tex
 LaTeX2e <2020-02-02> patch level 2
 L3 programming layer <2020-02-14>
 (/usr/share/texlive/texmf-dist/tex/latex/standalone/standalone.cls
@@ -370,8 +370,8 @@ File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
 \l__kernel_color_stack_int=\count199
 \l__pdf_internal_box=\box57
 )
-No file trip10.aux.
-\openout1 = `trip10.aux'.
+No file trip09.aux.
+\openout1 = `trip09.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 5.
 LaTeX Font Info:    ... okay on input line 5.
@@ -425,19 +425,19 @@ Missing character: There is no ; in font nullfont!
 
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./trip10.aux) ) 
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./trip09.aux) ) 
 Here is how much of TeX's memory you used:
  11959 strings out of 483183
  245398 string characters out of 5966292
- 1646494 words of memory out of 5000000
+ 1648494 words of memory out of 5000000
  26779 multiletter control sequences out of 15000+600000
  532935 words of font info for 26 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 68i,7n,64p,407b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 68i,7n,64p,451b,554s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on trip10.pdf (1 page, 91419 bytes).
+Output written on trip09.pdf (1 page, 91972 bytes).
 PDF statistics:
  19 PDF objects out of 1000 (max. 8388607)
  13 compressed objects within 1 object stream
