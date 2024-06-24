@@ -1,11 +1,10 @@
+import tkinter as tk
 import matplotlib.pyplot as plt
 import numpy as np
-import tkinter as tk
 
 class Race:
-
     def __init__(self, racecar, track, name='Grand Prix',
-    draw_last_possible_moves=1, draw_racecar_path=1,draw_distances=1, draw_indices=1, draw_best_path=1):
+                 draw_last_possible_moves=1, draw_racecar_path=1, draw_distances=1, draw_indices=1, draw_best_path=1):
         self.name = name
         self.track = track
         self.racecar = racecar
@@ -24,12 +23,10 @@ class Race:
 
     def translate_positions(self, pos_list):
         num_rows = len(self.track.grid)
-
         translated_pos_list = []
         for x, y in pos_list:
             translated_x = num_rows - 1 - x
             translated_pos_list.append((y, translated_x))
-
         return translated_pos_list
 
     def make_move_and_refresh(self, canvas):
@@ -42,7 +39,7 @@ class Race:
 
         if self.draw_racecar_path:
             self.draw_racecar_path_f(canvas)
-        if self.draw_best_path and self.racecar.best_path != None:
+        if self.draw_best_path and self.racecar.best_path is not None:
             self.draw_best_path_f(canvas)
         if self.draw_last_possible_moves:
             self.draw_last_possible_moves_f(canvas)
@@ -121,12 +118,48 @@ class Race:
         self.draw_track(canvas)
         if self.draw_racecar_path:
             self.draw_racecar_path_f(canvas)
-        if self.draw_best_path and self.racecar.best_path != None:
+        if self.draw_best_path and self.racecar.best_path is not None:
             self.draw_best_path_f(canvas)
         if self.draw_last_possible_moves:
             self.draw_last_possible_moves_f(canvas)
 
         button = tk.Button(root, text="Make Move", command=lambda: self.make_move_and_refresh(canvas))
         button.pack()
+
+        root.mainloop()
+
+    def draw_multiple_paths(self, paths):
+        root = tk.Tk()
+        root.title(f"{self.name} - Multiple Paths")
+
+        width = (len(self.track.grid[0]) + 1) * self.cell_size
+        height = (len(self.track.grid) + 1) * self.cell_size
+
+        canvas = tk.Canvas(root, width=width, height=height)
+        canvas.pack()
+
+        if self.draw_indices:
+            self.draw_indices_f(canvas)
+
+        self.draw_track(canvas)
+
+        # Use a colormap to dynamically generate colors based on the number of paths
+        num_paths = len(paths)
+        colors = plt.cm.get_cmap('Wistia', num_paths)
+
+        for idx, path in enumerate(paths):
+            translated_path = path
+            color = colors(idx)[:3]  # Extract RGB components
+            color = "#{:02x}{:02x}{:02x}".format(int(color[0]*255), int(color[1]*255), int(color[2]*255))  # Convert to hexadecimal
+            for k, (x, y) in enumerate(translated_path):
+                x_center = (y + 1.5) * self.cell_size
+                y_center = (x + 1.5) * self.cell_size
+                canvas.create_oval(x_center - 3, y_center - 3, x_center + 3, y_center + 3, fill=color)
+                canvas.create_text(x_center, y_center, text=str(k), fill='white')
+
+                if k < len(translated_path) - 1:
+                    x_next_center = (translated_path[k + 1][1] + 1.5) * self.cell_size
+                    y_next_center = (translated_path[k + 1][0] + 1.5) * self.cell_size
+                    canvas.create_line(x_center, y_center, x_next_center, y_next_center, fill=color, width=2)
 
         root.mainloop()

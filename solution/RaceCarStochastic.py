@@ -1,10 +1,12 @@
 import numpy as np
 import math
+import random
 from collections import deque
 from bresenham import bresenham
 
-class RaceCar:
-    def __init__(self, track, max_depth=5, strategy='fos', max_speed=7, always_moving=1, speed_importance=5):
+class RaceCarStochastic:
+
+    def __init__(self, track, max_depth=1, strategy='fo', max_speed=7, always_moving=1, speed_importance=5, seed=42, random_cost=0, backtrack=0):
         self.track = track
         self.start_pos = self.find_letter_indices('S')
         self.end_pos = self.find_letter_indices('F')
@@ -18,25 +20,60 @@ class RaceCar:
         self.speed_importance = speed_importance # = k for logistic_function
         self.always_moving = always_moving
         self.best_path = [self.start_pos[0]]
+        self.random_cost = random_cost
+        self.random_weights = [0.8, 0.1, 0.05, 0.03, 0.02]
+        self.backtrack = backtrack
+        self.current_backtracks = 0
+
+        random.seed(seed)
 
     def complete_moves(self):
-        while self.pos not in self.end_pos:
-            self.make_move()
+        try:
+            while self.pos not in self.end_pos:
+                self.make_move()
+        except Exception as e:
+            print("Crashed:", e)
+            if self.backtrack and self.current_backtracks < 1000  and len(self.pos_hist) > 3:
+                self.current_backtracks += 1
+                #print("Backtracking")
+                self.pos_hist.pop()
+                self.pos_hist.pop()
+                self.pos = self.pos_hist[-1]
+                previous_pos = self.pos_hist[-2]
+                self.inertia = (self.pos[0] - previous_pos[0], self.pos[1] - previous_pos[1])
+                self.complete_moves()
+
+            return 1  # Crashed
 
     def make_move(self):
-        new_pos = self.find_next_pos(self.pos, self.inertia)
-        print(f"{len(self.pos_hist)} {new_pos}")
+        if random.random() < 0.1:  # 10% probability to make a random move
+            new_pos = self.random_move()
+        else:
+            new_pos = self.find_next_pos(self.pos, self.inertia)
+
+        #print(f"{len(self.pos_hist)} {new_pos}")
         self.inertia = (new_pos[0] - self.pos[0], new_pos[1] - self.pos[1])
-        print(f"max inertia: {self.max_inertia(self.inertia)}")
+        #print(f"max inertia: {self.max_inertia(self.inertia)}")
 
         if self.max_inertia(self.inertia) > self.max_speed * 3/4:
-            self.max_depth = self.init_max_depth + 1
+            self.max_depth = self.init_max_depth
         else:
             self.max_depth = self.init_max_depth
-        print(f"Max depth: {self.max_depth}")
+        #print(f"Max depth: {self.max_depth}")
 
         self.pos = new_pos
         self.pos_hist.append(new_pos)
+
+    def random_move(self):
+        current_tries = 0
+        possible_positions = self.calculate_possible_pos(self.pos, self.inertia)
+        next_pos = random.choice(possible_positions) if possible_positions else self.pos
+        while self.is_valid_path(self.pos, next_pos) == False and current_tries < 20:
+            next_pos = random.choice(possible_positions) if possible_positions else self.pos
+            current_tries += 1
+        if self.is_valid_path(self.pos, next_pos) == False:
+            raise Exception("No available moves")
+        return next_pos
 
     def find_next_pos(self, start_pos, start_inertia):
         queue = deque([([start_pos], start_inertia, 0)])
@@ -151,6 +188,21 @@ class RaceCar:
             possible_pos.remove(pos)
         return possible_pos
 
+    def calculate_all_possible_pos(self, pos, inertia):
+        possible_pos = []
+        if self.track.grid[pos[0]][pos[1]] == 'T' or self.track.grid[pos[0]][pos[1]] == 'S':
+            for direction in self.track.directions:
+                possible_pos.append((pos[0] + inertia[0] + direction[0], pos[1] + inertia[1] + direction[1]))
+        elif self.track.grid[pos[0]][pos[1]] == 'G':
+            if inertia in self.track.directions:
+                for direction in self.track.directions:
+                    possible_pos.append((pos[0] + direction[0], pos[1] + direction[1]))
+            else:
+                slow_inertia = self.slow_inertia(inertia)
+                possible_pos.append((pos[0] + slow_inertia[0], pos[1] + slow_inertia[1]))
+
+        return possible_pos
+
     def slow_inertia(self, inertia):
         slow_inertia = tuple(x + 1 if x < -1 else x - 1 if x > 1 else x for x in inertia)
         return slow_inertia
@@ -166,16 +218,31 @@ class RaceCar:
     def evaluate_pos(self, pos, inertia):
         if self.strategy == 'f':
             if self.is_valid_position(pos):
-                return self.track.distances[pos[0]][pos[1]]
+                if self.random_cost:
+                    delta = random.choices([0, 1, 2, 3, 4], weights=self.random_weights)[0]
+                    cost = k.distances[pos[0]][pos[1]] + delta
+                else:
+                    cost = k.distances[pos[0]][pos[1]]
+                return cost
             else:
                 return np.inf
         elif self.strategy == 'fo':
             if self.is_valid_position(pos):
-                return self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]]
+                if self.random_cost:
+                    delta = random.choices([0, 1, 2, 3, 4], weights=self.random_weights)[0]
+                    cost = self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] + delta
+                else:
+                    cost = self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]]
+                return cost
             else:
                 return np.inf
         else:
-            return self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] - self.logistic_function(self.max_inertia(inertia))
+            if self.random_cost:
+                delta = random.choices([0, 1, 2, 3, 4], weights=self.random_weights)[0]
+                cost = self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] - self.logistic_function(self.max_inertia(inertia)) + delta
+            else:
+                cost = self.track.distances[pos[0]][pos[1]] + self.track.distances_to_object[pos[0]][pos[1]] - self.logistic_function(self.max_inertia(inertia))
+            return cost
 
     def logistic_function(self, x):
         return 1 / (1 + np.exp(-self.speed_importance * (x - (self.max_speed / 2))))
