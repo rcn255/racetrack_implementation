@@ -43,7 +43,8 @@ class RaceCarStochastic:
                 self.inertia = (self.pos[0] - previous_pos[0], self.pos[1] - previous_pos[1])
                 self.complete_moves()
 
-            return 1  # Crashed
+            if self.pos not in self.end_pos:
+                return 1  # Crashed
 
     def make_move(self):
         if random.random() < 0.1:  # 10% probability to make a random move
